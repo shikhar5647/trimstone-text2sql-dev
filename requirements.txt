@@ -1,0 +1,11 @@
+streamlit
+langgraph
+langchain
+langchain-google-genai
+google-generativeai
+pyodbc
+python-dotenv
+pandas
+sqlparse
+typing-extensions
+pydantic
