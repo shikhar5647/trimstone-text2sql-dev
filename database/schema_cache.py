@@ -6,6 +6,7 @@ from pathlib import Path
 from config.settings import settings
 from database.connection import db_connection
 from utils.logger import setup_logger
+import pandas as pd
 
 logger = setup_logger(__name__)
 
@@ -73,6 +74,77 @@ class SchemaCache:
             raise
         
         return schema
+
+    def load_schema_from_excel(self, excel_path: Optional[Path] = None) -> Dict[str, Any]:
+        """Load schema details from an Excel file and store to cache.
+
+        Expected layout: a sheet per table or a single sheet with columns
+        [table_name, column_name, data_type, is_nullable].
+        """
+        path = excel_path or (settings.PROJECT_ROOT / 'trimstone_final.xlsx')
+        logger.info(f"Loading schema from Excel: {path}")
+        schema = {
+            'timestamp': time.time(),
+            'tables': {}
+        }
+        try:
+            xls = pd.ExcelFile(path)
+            if len(xls.sheet_names) == 1:
+                df = pd.read_excel(xls, xls.sheet_names[0])
+                required = {"table_name", "column_name", "data_type", "is_nullable"}
+                missing = required - {c.lower() for c in df.columns}
+                if missing:
+                    raise ValueError(f"Excel missing required columns: {missing}")
+                # Normalize columns
+                df.columns = [c.lower() for c in df.columns]
+                for table_name, group in df.groupby('table_name'):
+                    columns = []
+                    for _, row in group.iterrows():
+                        columns.append({
+                            'column_name': str(row['column_name']),
+                            'data_type': str(row['data_type']),
+                            'is_nullable': 'YES' if str(row['is_nullable']).strip().upper() in ['YES', 'Y', 'TRUE', '1'] else 'NO',
+                        })
+                    schema['tables'][str(table_name)] = {
+                        'columns': columns,
+                        'column_names': [c['column_name'] for c in columns]
+                    }
+            else:
+                # Sheet per table
+                for sheet in xls.sheet_names:
+                    df = pd.read_excel(xls, sheet)
+                    lower_cols = [c.lower() for c in df.columns]
+                    mapping = {name: idx for idx, name in enumerate(lower_cols)}
+                    def get(col):
+                        return df.iloc[:, mapping[col]] if col in mapping else None
+                    col_name_series = get('column_name') or get('column') or get('name')
+                    data_type_series = get('data_type') or get('type')
+                    is_nullable_series = get('is_nullable') or get('nullable')
+                    if col_name_series is None or data_type_series is None:
+                        logger.warning(f"Sheet {sheet} missing required columns; skipping")
+                        continue
+                    columns = []
+                    for i in range(len(col_name_series)):
+                        is_nullable_val = 'YES'
+                        if is_nullable_series is not None:
+                            v = str(is_nullable_series.iloc[i]).strip().upper()
+                            is_nullable_val = 'YES' if v in ['YES', 'Y', 'TRUE', '1'] else 'NO'
+                        columns.append({
+                            'column_name': str(col_name_series.iloc[i]),
+                            'data_type': str(data_type_series.iloc[i]),
+                            'is_nullable': is_nullable_val,
+                        })
+                    schema['tables'][sheet] = {
+                        'columns': columns,
+                        'column_names': [c['column_name'] for c in columns]
+                    }
+            self.cache = schema
+            self.save_cache()
+            logger.info(f"Loaded schema from Excel. Found {len(schema['tables'])} tables.")
+            return schema
+        except Exception as e:
+            logger.error(f"Failed to load schema from Excel: {str(e)}")
+            raise
     
     def get_schema(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get schema (from cache or refresh)."""

@@ -64,3 +64,34 @@ def extract_tables_from_query(sql: str) -> List[str]:
             from_seen = True
     
     return [t.strip('[]') for t in tables if t.strip()]
+
+def ensure_top_limit(sql: str, limit: int = 100) -> str:
+    """Ensure a TOP limit exists for SELECT queries in MSSQL.
+
+    Adds TOP N right after SELECT if not already present and not using OFFSET/FETCH.
+    """
+    parsed = sqlparse.parse(sql)
+    if not parsed:
+        return sql
+    statement = parsed[0]
+    tokens = [t for t in statement.tokens if not t.is_whitespace]
+
+    # Only apply to SELECT statements
+    if not tokens or tokens[0].ttype is not sqlparse.tokens.DML or tokens[0].value.upper() != 'SELECT':
+        return sql
+
+    # If TOP already present, skip
+    text_upper = statement.to_unicode().upper()
+    if ' TOP ' in text_upper or ' OFFSET ' in text_upper or ' FETCH ' in text_upper:
+        return sql
+
+    # Insert TOP after SELECT
+    # Build new SQL conservatively to avoid breaking formatting
+    # Use original string to preserve case/formatting as much as possible
+    original = statement.to_unicode()
+    select_prefix = 'SELECT'
+    idx = original.upper().find(select_prefix)
+    if idx == -1:
+        return sql
+    idx += len(select_prefix)
+    return original[:idx] + f" TOP {limit}" + original[idx:]

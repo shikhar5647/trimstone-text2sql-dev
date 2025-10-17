@@ -20,16 +20,18 @@ class NLUAgent:
         user_query = state["user_query"]
         logger.info(f"Analyzing intent for query: {user_query}")
         
-        prompt = f"""Analyze the following database query and extract:
-1. The intent (what the user wants to do - e.g., "get data", "aggregate", "filter", "join")
-2. Key entities mentioned (table names, column names, filters, etc.)
+        prompt = f"""You are an expert NLU agent helping a Text-to-SQL system.
+Read the user's request and extract:
+1) Intent: high-level goal such as list/filter/aggregate/join/detail/count/top-n.
+2) Entities: important nouns/values (companies, cities, dates, ids, statuses, budget thresholds, etc.).
+3) Tables Likely Needed: from the known tables in this database. Use only exact table names you know.
 
 User Query: {user_query}
 
-Respond in the following format:
+Respond exactly in this format (one per line):
 Intent: <intent>
-Entities: <comma-separated list of entities>
-Tables Likely Needed: <comma-separated list of table names from: client, contacts, project>
+Entities: <comma-separated values>
+Tables Likely Needed: <comma-separated exact table names>
 """
         
         try:
