@@ -90,6 +90,13 @@ def main():
                             st.success("Schema loaded from Excel!")
                         except Exception as e:
                             st.error(f"Failed to load Excel schema: {e}")
+            if st.button("Load manual schema", use_container_width=True):
+                with st.spinner("Loading manual schema..."):
+                    try:
+                        schema_cache.load_manual_schema()
+                        st.success("Manual schema loaded!")
+                    except Exception as e:
+                        st.error(f"Failed to load manual schema: {e}")
         if st.button("🔄 Refresh Schema Cache"):
             with st.spinner("Refreshing schema cache..."):
                 schema_cache.refresh_schema()

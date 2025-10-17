@@ -173,5 +173,117 @@ class SchemaCache:
         
         return "\n".join(text_parts)
 
+    def load_manual_schema(self) -> Dict[str, Any]:
+        """Load a predefined manual schema for client, contacts, and project tables."""
+        logger.info("Loading manual schema definition")
+        def build_columns(pairs: list[tuple[str, str]]) -> list[dict[str, str]]:
+            return [
+                {"column_name": name, "data_type": dtype, "is_nullable": "YES"}
+                for name, dtype in pairs
+            ]
+
+        manual = {
+            'timestamp': time.time(),
+            'tables': {
+                'client': {
+                    'columns': build_columns([
+                        ("id", "INT"),
+                        ("name", "NVARCHAR(255)"),
+                        ("slug", "NVARCHAR(255)"),
+                        ("email", "NVARCHAR(255)"),
+                        ("phone", "NVARCHAR(50)"),
+                        ("address1", "NVARCHAR(255)"),
+                        ("address2", "NVARCHAR(255)"),
+                        ("city", "NVARCHAR(100)"),
+                        ("state", "NVARCHAR(100)"),
+                        ("country", "NVARCHAR(100)"),
+                        ("zipcode", "NVARCHAR(20)"),
+                        ("created_at", "DATETIME2"),
+                        ("updated_at", "DATETIME2"),
+                        ("team_id", "INT"),
+                        ("channel_id", "INT"),
+                        ("drive_id", "NVARCHAR(255)"),
+                        ("delta_token", "NVARCHAR(255)"),
+                        ("drive_item_id", "NVARCHAR(255)"),
+                        ("hubspot_id", "NVARCHAR(255)"),
+                        ("owner_name", "NVARCHAR(255)"),
+                        ("status", "NVARCHAR(50)"),
+                        ("industry", "NVARCHAR(100)"),
+                        ("type", "NVARCHAR(50)"),
+                        ("no_employees", "INT"),
+                        ("description", "NVARCHAR(MAX)"),
+                        ("timezone", "NVARCHAR(100)"),
+                        ("created_by", "NVARCHAR(255)"),
+                        ("client_number", "NVARCHAR(100)")
+                    ]),
+                    'column_names': [
+                        "id","name","slug","email","phone","address1","address2","city","state","country","zipcode","created_at","updated_at","team_id","channel_id","drive_id","delta_token","drive_item_id","hubspot_id","owner_name","status","industry","type","no_employees","description","timezone","created_by","client_number"
+                    ]
+                },
+                'contacts': {
+                    'columns': build_columns([
+                        ("id", "INT"),
+                        ("first_name", "NVARCHAR(100)"),
+                        ("last_name", "NVARCHAR(100)"),
+                        ("email", "NVARCHAR(255)"),
+                        ("owner", "NVARCHAR(255)"),
+                        ("phone", "NVARCHAR(50)"),
+                        ("mobile", "NVARCHAR(50)"),
+                        ("stage", "NVARCHAR(50)"),
+                        ("client_id", "INT"),
+                        ("client_name", "NVARCHAR(255)"),
+                        ("hubspot_id", "NVARCHAR(255)"),
+                        ("created_at", "DATETIME2"),
+                        ("updated_at", "DATETIME2")
+                    ]),
+                    'column_names': [
+                        "id","first_name","last_name","email","owner","phone","mobile","stage","client_id","client_name","hubspot_id","created_at","updated_at"
+                    ]
+                },
+                'project': {
+                    'columns': build_columns([
+                        ("id", "INT"),
+                        ("name", "NVARCHAR(255)"),
+                        ("client_id", "INT"),
+                        ("description", "NVARCHAR(MAX)"),
+                        ("slug", "NVARCHAR(255)"),
+                        ("category", "NVARCHAR(100)"),
+                        ("status", "NVARCHAR(50)"),
+                        ("priority", "NVARCHAR(50)"),
+                        ("start_date", "DATE"),
+                        ("end_date", "DATE"),
+                        ("currency", "NVARCHAR(10)"),
+                        ("budget", "DECIMAL(18,2)"),
+                        ("created_by", "NVARCHAR(255)"),
+                        ("updated_by", "NVARCHAR(255)"),
+                        ("created_at", "DATETIME2"),
+                        ("updated_at", "DATETIME2"),
+                        ("billing_type", "NVARCHAR(50)"),
+                        ("amount_billed", "DECIMAL(18,2)"),
+                        ("budget_hours", "DECIMAL(18,2)"),
+                        ("team_id", "INT"),
+                        ("channel_id", "INT"),
+                        ("drive_id", "NVARCHAR(255)"),
+                        ("drive_subscription_id", "NVARCHAR(255)"),
+                        ("delta_token", "NVARCHAR(255)"),
+                        ("drive_item_id", "NVARCHAR(255)"),
+                        ("hubspot_id", "NVARCHAR(255)"),
+                        ("xero_id", "NVARCHAR(255)"),
+                        ("owner_id", "INT"),
+                        ("owner_email", "NVARCHAR(255)"),
+                        ("last_modified_date", "DATE"),
+                        ("project_number", "NVARCHAR(100)")
+                    ]),
+                    'column_names': [
+                        "id","name","client_id","description","slug","category","status","priority","start_date","end_date","currency","budget","created_by","updated_by","created_at","updated_at","billing_type","amount_billed","budget_hours","team_id","channel_id","drive_id","drive_subscription_id","delta_token","drive_item_id","hubspot_id","xero_id","owner_id","owner_email","last_modified_date","project_number"
+                    ]
+                }
+            }
+        }
+        self.cache = manual
+        self.save_cache()
+        logger.info("Manual schema loaded successfully")
+        return manual
+
 # Global schema cache instance
 schema_cache = SchemaCache()

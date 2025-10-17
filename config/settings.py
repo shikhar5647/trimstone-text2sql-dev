@@ -3,15 +3,18 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Project Root
+PROJECT_ROOT_COMPUTED: Path = Path(__file__).resolve().parent.parent
+
+# Load environment variables from project root .env explicitly
+load_dotenv(PROJECT_ROOT_COMPUTED / ".env")
 
 class Settings:
     """Application settings."""
     
     # Gemini Configuration
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = "gemini-2.5-pro"
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
     
     # Database Configuration
     DB_SERVER: str = os.getenv("DB_SERVER", "trimstone-dev.database.windows.net")
@@ -25,7 +28,7 @@ class Settings:
     CACHE_TTL: int = int(os.getenv("CACHE_TTL", "3600"))
     
     # Project Root
-    PROJECT_ROOT: Path = Path(__file__).parent.parent
+    PROJECT_ROOT: Path = PROJECT_ROOT_COMPUTED
     
     @property
     def database_url(self) -> str:
