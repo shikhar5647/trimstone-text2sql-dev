@@ -59,8 +59,38 @@ class DatabaseConnection:
         """Execute SELECT query and return results."""
         with self.get_cursor() as cursor:
             cursor.execute(query)
-            results = cursor.fetchall()
-            return results
+            # For as_dict=True, rows are already dicts keyed by column names. Some drivers may deliver
+            # unnamed columns; provide a fallback mapping to stable names.
+            try:
+                results = cursor.fetchall()
+                if results and isinstance(results[0], dict):
+                    # Ensure all rows share the same keys; if any key is empty, rename it deterministically
+                    keys = list(results[0].keys())
+                    fixed_keys = []
+                    for idx, k in enumerate(keys):
+                        name = k if k and str(k).strip() != '' else f'column_{idx}'
+                        fixed_keys.append(name)
+                    if keys != fixed_keys:
+                        normalized = []
+                        for row in results:
+                            new_row = {}
+                            for i, original_key in enumerate(keys):
+                                new_row[fixed_keys[i]] = row.get(original_key)
+                            normalized.append(new_row)
+                        return normalized
+                    return results
+                # If not dicts, build dicts from cursor.description
+                desc = cursor.description or []
+                columns = []
+                for idx, col in enumerate(desc):
+                    name = col[0] if col and col[0] else None
+                    if not name or str(name).strip() == '':
+                        name = f'column_{idx}'
+                    columns.append(str(name))
+                return [dict(zip(columns, row)) for row in results]
+            except Exception as e:
+                logger.error(f"Failed to fetch results: {str(e)}")
+                raise
     
     def get_table_schema(self, table_name: str) -> List[Dict[str, str]]:
         """Get schema information for a specific table."""
@@ -91,7 +121,8 @@ class DatabaseConnection:
         """Test database connection."""
         try:
             with self.get_cursor() as cursor:
-                cursor.execute("SELECT 1")
+                # Name the column to avoid drivers complaining about unnamed columns with as_dict=True
+                cursor.execute("SELECT 1 AS result")
                 return True
         except Exception as e:
             logger.error(f"Connection test failed: {str(e)}")
