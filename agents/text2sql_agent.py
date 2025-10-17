@@ -5,7 +5,7 @@ from config.secrets import secrets_manager
 from config.settings import settings
 from graph.state import GraphState
 from utils.logger import setup_logger
-from utils.helpers import sanitize_sql
+from utils.helpers import sanitize_sql, ensure_top_limit
 
 logger = setup_logger(__name__)
 
@@ -23,22 +23,30 @@ class Text2SQLAgent:
         
         logger.info(f"Generating SQL for: {user_query}")
         
-        prompt = f"""You are an expert SQL developer working with a Microsoft SQL Server database.
+        prompt = f"""You are a senior data engineer generating safe, production-quality T-SQL for Microsoft SQL Server.
 
-Database Schema:
+You will receive the user request and the available schema. Your job is to write a single, safe SELECT statement.
+
+STRICT RULES:
+- Output only the SQL, no commentary or markdown fences.
+- Only SELECT is allowed. Never use INSERT/UPDATE/DELETE/CREATE/ALTER/DROP/EXEC.
+- Prefer explicit JOINs with ON clauses over implicit joins.
+- Qualify columns with table aliases when joining.
+- Use ISNULL for null-safe display where appropriate.
+- Use meaningful column aliases for readability.
+- Use WHERE filters for user constraints; avoid returning entire tables.
+- Use TOP 100 by default if the user didn't specify a limit.
+- For text search, use LIKE with wildcards and proper quoting.
+- Prefer COUNT(*) for counts; use GROUP BY for aggregations.
+- For date filters, use BETWEEN or >= <= and proper CAST/CONVERT if needed.
+
+SCHEMA (authoritative):
 {schema_context}
 
-User Request: {user_query}
+USER REQUEST:
+{user_query}
 
-Generate a SQL query that fulfills the user's request. Follow these rules:
-1. Only generate SELECT queries (no INSERT, UPDATE, DELETE, DROP, etc.)
-2. Use proper MS SQL Server syntax
-3. Use appropriate JOINs when data from multiple tables is needed
-4. Include only the SQL query in your response, no explanations
-5. Use proper aliases for clarity
-6. Format the query properly
-
-SQL Query:"""
+Return only the final SQL (no code fences, no explanation)."""
         
         try:
             response = self.model.generate_content(prompt)
@@ -52,6 +60,7 @@ SQL Query:"""
             
             # Sanitize and format
             sql_query = sanitize_sql(sql_query)
+            sql_query = ensure_top_limit(sql_query, limit=100)
             
             state["generated_sql"] = sql_query
             state["step"] = "sql_generated"

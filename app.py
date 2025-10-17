@@ -73,10 +73,27 @@ def main():
         
         # Schema information
         st.subheader("Database Schema")
-        if st.button("🔄 Refresh Schema"):
-            with st.spinner("Refreshing schema..."):
+        # Option to load schema from Excel
+        with st.expander("Schema Source", expanded=False):
+            st.caption("Choose how to build the schema context exposed to the LLM")
+            col_a, col_b = st.columns([1,1])
+            with col_a:
+                if st.button("Load schema from DB", use_container_width=True):
+                    with st.spinner("Refreshing schema from database..."):
+                        schema_cache.refresh_schema()
+                        st.success("Schema refreshed from DB!")
+            with col_b:
+                if st.button("Load schema from Excel", use_container_width=True):
+                    with st.spinner("Loading schema from Excel..."):
+                        try:
+                            schema_cache.load_schema_from_excel()
+                            st.success("Schema loaded from Excel!")
+                        except Exception as e:
+                            st.error(f"Failed to load Excel schema: {e}")
+        if st.button("🔄 Refresh Schema Cache"):
+            with st.spinner("Refreshing schema cache..."):
                 schema_cache.refresh_schema()
-                st.success("Schema refreshed!")
+                st.success("Schema cache refreshed!")
         
         schema = schema_cache.get_schema()
         tables = list(schema.get('tables', {}).keys())
