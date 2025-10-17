@@ -68,30 +68,24 @@ def extract_tables_from_query(sql: str) -> List[str]:
 def ensure_top_limit(sql: str, limit: int = 100) -> str:
     """Ensure a TOP limit exists for SELECT queries in MSSQL.
 
-    Adds TOP N right after SELECT if not already present and not using OFFSET/FETCH.
+    Inserts "TOP {limit}" immediately after the first SELECT if not already present
+    and if the query is not using OFFSET/FETCH. Uses lightweight string handling
+    to avoid driver-specific parse quirks.
     """
-    parsed = sqlparse.parse(sql)
-    if not parsed:
+    if not sql:
         return sql
-    statement = parsed[0]
-    tokens = [t for t in statement.tokens if not t.is_whitespace]
-
-    # Only apply to SELECT statements
-    if not tokens or tokens[0].ttype is not sqlparse.tokens.DML or tokens[0].value.upper() != 'SELECT':
+    original = sql.strip()
+    upper = original.upper()
+    if not upper.startswith('SELECT'):
         return sql
-
-    # If TOP already present, skip
-    text_upper = statement.to_unicode().upper()
-    if ' TOP ' in text_upper or ' OFFSET ' in text_upper or ' FETCH ' in text_upper:
+    if ' TOP ' in upper or ' OFFSET ' in upper or ' FETCH ' in upper:
         return sql
-
-    # Insert TOP after SELECT
-    # Build new SQL conservatively to avoid breaking formatting
-    # Use original string to preserve case/formatting as much as possible
-    original = statement.to_unicode()
-    select_prefix = 'SELECT'
-    idx = original.upper().find(select_prefix)
-    if idx == -1:
-        return sql
-    idx += len(select_prefix)
-    return original[:idx] + f" TOP {limit}" + original[idx:]
+    # Find the first occurrence of SELECT at the start and insert TOP
+    # Keep existing capitalization of SELECT by replacing only once at start
+    # Normalize leading whitespace
+    leading_ws_len = len(sql) - len(sql.lstrip())
+    leading_ws = sql[:leading_ws_len]
+    rest = sql[leading_ws_len:]
+    if rest[:6].upper() == 'SELECT':
+        return f"{leading_ws}{rest[:6]} TOP {limit}{rest[6:]}"
+    return sql

@@ -17,8 +17,15 @@ class SchemaAgent:
             # Get full schema
             schema = schema_cache.get_schema()
             
-            # Filter to relevant tables
+            # Filter to relevant tables; normalize simple plurals to match cache keys
             relevant_tables = state.get("relevant_tables", [])
+            normalized = []
+            for t in relevant_tables:
+                key = t.strip()
+                if key.lower().endswith('s'):
+                    key = key[:-1]
+                normalized.append(key)
+            relevant_tables = normalized or list(schema.get('tables', {}).keys())
             
             if not relevant_tables:
                 # If no tables identified, include all
@@ -27,7 +34,7 @@ class SchemaAgent:
             # Build schema context
             schema_parts = []
             for table_name in relevant_tables:
-                table_info = schema.get('tables', {}).get(table_name)
+                table_info = schema.get('tables', {}).get(table_name) or schema.get('tables', {}).get(table_name.lower()) or schema.get('tables', {}).get(table_name.capitalize())
                 if table_info:
                     schema_parts.append(f"\n### Table: {table_name}")
                     schema_parts.append("Columns:")
