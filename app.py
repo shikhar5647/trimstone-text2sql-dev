@@ -15,6 +15,11 @@ from ui.components import (
     display_validation_result
 )
 from utils.logger import setup_logger
+from dotenv import load_dotenv
+load_dotenv()
+from config.settings import settings
+
+
 
 logger = setup_logger(__name__)
 
