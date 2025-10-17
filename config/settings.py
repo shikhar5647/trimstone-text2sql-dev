@@ -21,6 +21,7 @@ class Settings:
     DB_DATABASE: str = os.getenv("DB_DATABASE", "trimstone")
     DB_USERNAME: str = os.getenv("DB_USERNAME", "trimstone")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
+    DB_ENCRYPT: bool = os.getenv("DB_ENCRYPT", "true").lower() == "true"
     
     # Application Settings
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
