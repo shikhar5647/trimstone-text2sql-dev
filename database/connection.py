@@ -22,7 +22,8 @@ class DatabaseConnection:
                 password=settings.DB_PASSWORD,
                 database=settings.DB_DATABASE,
                 as_dict=True,
-                tds_version='7.4'
+                tds_version='7.4',
+                autocommit=True
             )
             logger.info("Database connection established successfully")
             return self._connection
@@ -45,10 +46,7 @@ class DatabaseConnection:
                 self.connect()
             cursor = self._connection.cursor()
             yield cursor
-            self._connection.commit()
         except Exception as e:
-            if self._connection:
-                self._connection.rollback()
             logger.error(f"Database error: {str(e)}")
             raise
         finally:
