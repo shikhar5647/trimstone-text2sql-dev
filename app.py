@@ -15,8 +15,6 @@ from ui.components import (
     display_validation_result
 )
 from utils.logger import setup_logger
-from dotenv import load_dotenv
-load_dotenv()
 from config.settings import settings
 
 
@@ -70,11 +68,15 @@ def main():
         
         # Connection status
         st.subheader("Database Connection")
-        if db_connection.test_connection():
-            st.success("✅ Connected to MS SQL Server")
-        else:
-            st.error("❌ Database connection failed")
-            st.stop()
+        st.info("Database connection not required to generate SQL. Use cached schema or test connection manually.")
+        conn_test = st.button("🔎 Test DB Connection", use_container_width=True)
+        if conn_test:
+            with st.spinner("Testing database connection..."):
+                if db_connection.test_connection():
+                    st.success("✅ Connected to MS SQL Server")
+                else:
+                    st.error("❌ Database connection failed. Using cached schema for SQL generation.")
+                    # do not stop — allow offline generation using schema cache
         
         # Schema information
         st.subheader("Database Schema")
