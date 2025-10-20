@@ -158,23 +158,10 @@ Logging:
 - Formatting & linting:
   - Use black / ruff in CI locally.
 
----
-
-## Suggested improvements
-- Add a dedicated `requirements.txt` with pinned versions.
-- Add unit tests for agent modules and DB wrapper.
-- Add "offline mode" toggle to UI that disables DB actions and emphasizes using cached schema.
-- Improve DB connection code to use pyodbc and parameterized queries. Normalize column name casing from DB driver for consistent agents.
-- Add example `schema_cache.json` and sample Excel in `data/` for demos.
 
 ---
 
 ## License
-Add your preferred license (MIT/Apache2/Proprietary). This repository currently has no license file.
 
 ---
 
-If you want, I can:
-- Create a sample `requirements.txt` and `README` additions with commands to install the ODBC driver on Windows.
-- Add an "offline mode" toggle in `app.py` and a non-blocking DB test button.
-- Add a sample `schema_cache.json` and an example Excel file for testing.
