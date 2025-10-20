@@ -6,6 +6,12 @@ from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 
+def _tokenize(text: str) -> set[str]:
+    text = (text or "").lower()
+    tokens = set(re.findall(r"[a-z0-9_]+", text))
+    stopwords = {"show", "list", "get", "find", "all", "the", "me", "for", "with", "in", "of", "and", "top"}
+    return tokens - stopwords
+
 class SchemaAgent:
     """Schema Introspection and Retrieval Agent."""
     
