@@ -1,4 +1,5 @@
 """Schema Agent for retrieving relevant schema information."""
+import re
 from typing import Dict, Any, List
 from graph.state import GraphState
 from database.schema_cache import schema_cache

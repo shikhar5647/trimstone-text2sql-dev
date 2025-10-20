@@ -106,7 +106,8 @@ Instructions:
 """
 
     try:
-        response = self.model.generate_content(prompt)
+        sql_query = None
+        response = text2sql_agent.model.generate_content(prompt)
         sql_query = response.text.strip()
         
         # Extract SQL from markdown code blocks if present
