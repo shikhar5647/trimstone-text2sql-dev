@@ -48,7 +48,7 @@ Sample Data: {sample_rows}
 Provide a concise 2-3 sentence summary that:
 1. Confirms what data was retrieved
 2. Highlights key findings or patterns
-3. Is written in natural, user-friendly language
+3. Is written in natural, user-friendly language and easy to understand
 
 Summary:"""
             
