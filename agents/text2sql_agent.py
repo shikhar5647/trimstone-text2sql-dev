@@ -32,9 +32,6 @@ STRICT RULES:
 - Only SELECT is allowed. Never use INSERT/UPDATE/DELETE/CREATE/ALTER/DROP/EXEC.
 - Prefer explicit JOINs with ON clauses over implicit joins.
 - Qualify columns with table aliases when joining.
-- Based on the SCHEMA provided, do NOT invent any table or column names.
-- If the schema does not contain the necessary tables/columns to answer the question, respond with the exact sentence:
-  "NO_SCHEMA_MATCH: No correct schema identified to answer the question."
 - Use ISNULL for null-safe display where appropriate.
 - Use meaningful column aliases for readability.
 - Use WHERE filters for user constraints; avoid returning entire tables.
